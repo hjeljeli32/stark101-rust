@@ -1,11 +1,6 @@
-use ark_ff::{fields::{Field, Fp64, MontBackend, MontConfig}};
+use stark101::finite_fields::MyField;
+use ark_ff::fields::Field;
 use ark_std::{UniformRand, test_rng};
-
-#[derive(MontConfig)]
-#[modulus = "3221225473"]
-#[generator = "5"]
-pub struct MyFieldConfig;
-pub type MyField = Fp64<MontBackend<MyFieldConfig, 1>>;
 
 #[test]
 fn test_field_modulus() {
