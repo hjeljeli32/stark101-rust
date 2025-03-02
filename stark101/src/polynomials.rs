@@ -1,4 +1,5 @@
 use crate::finite_fields::MyField;
+use ark_ff::Field;
 use ark_poly::polynomial::univariate::*;
 use ark_std::{Zero, test_rng};
 use ark_poly::DenseUVPolynomial;
@@ -9,32 +10,43 @@ pub fn random_polynomial(degree: usize) -> DensePolynomial::<MyField> {
     DensePolynomial::<MyField>::rand(degree, rng)
 }
 
+/// Calculates lagrange polynomials corresponding to given points
+fn calculate_lagrange_polynomials(x_points: &Vec<MyField>) -> Vec<DensePolynomial<MyField>> {
+    let n = x_points.len();
+    let mut lagrange_polys = vec![];
+    
+    // Computes monomials and their product
+    let mut monomials = vec![];
+    let mut product = DensePolynomial {coeffs: vec![MyField::ONE]};
+    for x in x_points {
+        monomials.push(DensePolynomial {coeffs: vec![-*x, MyField::from(1)]});
+        product = product * monomials.last().unwrap();
+    }
+
+    // Computes Lagrange polynomials
+    for i in 0..n {
+        let numerator = &product / DensePolynomial {coeffs: vec![-x_points[i], MyField::from(1)]};
+        let mut denominator = MyField::ONE;
+        for j in 0..n {
+            if i != j {
+                denominator *= x_points[i] - x_points[j];  
+            }
+        }
+        lagrange_polys.push(&numerator * denominator.inverse().unwrap());
+    }
+    lagrange_polys
+}
+
 /// Interpolates a polynomial from given evaluations at points using Lagrange interpolation.
 pub fn interpolate_polynomial(x_points: Vec<MyField>, y_points: Vec<MyField>) -> DensePolynomial<MyField> {
     let n = x_points.len();
     let mut result = DensePolynomial::zero();
+    let lagrange_polys = calculate_lagrange_polynomials(&x_points);
 
-    // Loop through all the points (x, y) where x is the point and y is the evaluation
     for i in 0..n {
-        // Compute Lagrange basis polynomial L_i(x)
-        let mut lagrange_basis = DensePolynomial {coeffs: vec![MyField::from(1)]};
-
-        for j in 0..n {
-            if i != j {
-                // (x - x_j) / (x_i - x_j)
-                let numerator = DensePolynomial {coeffs: vec![-x_points[j], MyField::from(1)]};
-                let denominator = DensePolynomial {coeffs: vec![x_points[i] - x_points[j]]};
- 
-                // Multiply the numerator and denominator (i.e., (x - x_j) / (x_i - x_j))
-                lagrange_basis = lagrange_basis * &numerator / &denominator;
-            }
-        }
-
         // Multiply L_i(x) by y_i and add it to the result
-        let scaled_lagrange_basis = lagrange_basis * y_points[i];
-        result = result + &scaled_lagrange_basis;
+        result = result + &(&lagrange_polys[i] * y_points[i]);
     }
-
     result
 }
 

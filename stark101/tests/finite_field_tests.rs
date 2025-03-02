@@ -1,19 +1,19 @@
 use stark101::finite_fields::MyField;
-use ark_ff::fields::Field;
+use ark_ff::{fields::Field, AdditiveGroup};
 use ark_std::{UniformRand, test_rng};
 
 #[test]
 fn test_field_modulus() {
     let modulus = MyField::from(3221225473u64);
-    let zero = MyField::from(0u64);
+    let zero = MyField::ZERO;
     
     assert_eq!(modulus, zero, "modulus should be 0");
 }
 
 #[test]
 fn test_field_identity_elements() {
-    let zero = MyField::from(0u64);
-    let one = MyField::from(1u64);
+    let zero = MyField::ZERO;
+    let one = MyField::ONE;
 
     assert_eq!(zero + one, one, "0 + 1 should be 1");
     assert_eq!(one * one, one, "1 * 1 should be 1");
@@ -30,7 +30,7 @@ fn test_field_operations() {
 
     assert_eq!(sum, MyField::from(12u64), "Addition failed");
     assert_eq!(product, MyField::from(35u64), "Multiplication failed");
-    assert_eq!(inverse_a * a, MyField::from(1u64), "Inverse computation failed");
+    assert_eq!(inverse_a * a, MyField::ONE, "Inverse computation failed");
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn test_field_inversion() {
         let t = MyField::rand(&mut test_rng());
         let inverse_t = t.inverse().unwrap();
 
-        assert_eq!(inverse_t * t, MyField::from(1u64), "Inverse computation failed");
+        assert_eq!(inverse_t * t, MyField::ONE, "Inverse computation failed");
     }
 }
 
@@ -47,9 +47,9 @@ fn test_field_inversion() {
 fn test_field_division() {
     for _ in 0..100 {
         let t = MyField::rand(&mut test_rng());
-        let inverse_t = MyField::from(1u64) / t; 
+        let inverse_t = MyField::ONE / t; 
 
         assert_eq!(inverse_t, t.inverse().unwrap(), "Division and inverse are different"); 
-        assert_eq!(inverse_t * t, MyField::from(1u64), "Inverse computation failed");
+        assert_eq!(inverse_t * t, MyField::ONE, "Inverse computation failed");
     }
 }
