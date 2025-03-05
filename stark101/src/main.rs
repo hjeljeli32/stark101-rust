@@ -1,6 +1,7 @@
 use ark_poly::Polynomial;
-use stark101::{finite_fields::MyField, polynomials::*};
-use ark_ff::{FftField, Field};
+use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
+use stark101::{channel::*, finite_fields::MyField, polynomials::*};
+use ark_ff::{BigInteger, FftField, Field, PrimeField};
 
 fn main() {
     // FibonacciSq Trace
@@ -42,4 +43,24 @@ fn main() {
     for i in 0..8192 {
         assert!(((w_inv * eval_domain[1]).pow(&(vec![i]))) * w == eval_domain[i as usize], "element of eval_domain is wrong!");
     }
+    // Evaluate on a Coset
+    let f_eval: Vec<MyField> = eval_domain
+        .iter()
+        .map(|point| f.evaluate(&point))
+        .collect();
+    assert!(f_eval[0] == MyField::from(576067152), "Wrong first element of f_eval!");
+    assert!(f_eval[8191] == MyField::from(1076821037), "Wrong last element of f_eval!");
+
+    // Commitments
+    // We will use Sha256-based Merkle Trees as our commitment scheme
+    let leaves: Vec<[u8; 32]> = f_eval
+        .iter()
+        .map(|eval| Sha256::hash(&eval.into_bigint().to_bytes_le()))
+        .collect();
+    let f_merkle = MerkleTree::<Sha256>::from_leaves(&leaves);
+    // Channel
+    let mut channel = Channel::new();
+    channel.send(f_merkle.root().unwrap());
+    println!("{:?}", channel.proof)
+
 }

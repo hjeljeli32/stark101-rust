@@ -1,3 +1,5 @@
+use std::fmt;
+use hex::encode;
 use rs_merkle::{algorithms::Sha256, Hasher};
 use crate::utils::concatenate_arrays;
 
@@ -7,7 +9,7 @@ pub enum Type {
     Receive,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Member {
     pub member_type: Type,
     pub data: Vec<u8>,
@@ -16,6 +18,20 @@ pub struct Member {
 impl Member {
     pub fn new(member_type: Type, data:Vec<u8>) -> Self {
         Self { member_type, data }
+    }
+}
+
+impl fmt::Display for Member {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let encoded_data = encode(&self.data); // Apply encode to data
+        write!(f, "{{{:?}:{}}}", self.member_type, encoded_data)
+    }
+}
+
+impl fmt::Debug for Member {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let encoded_data = encode(&self.data); // Apply encode to data
+        write!(f, "{{{:?}:{}}}", self.member_type, encoded_data)
     }
 }
 
