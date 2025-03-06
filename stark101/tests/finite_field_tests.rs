@@ -1,12 +1,12 @@
-use stark101::finite_fields::MyField;
 use ark_ff::{fields::Field, AdditiveGroup};
-use ark_std::{UniformRand, test_rng};
+use ark_std::{test_rng, UniformRand};
+use stark101::finite_fields::MyField;
 
 #[test]
 fn test_field_modulus() {
     let modulus = MyField::from(3221225473u64);
     let zero = MyField::ZERO;
-    
+
     assert_eq!(modulus, zero, "modulus should be 0");
 }
 
@@ -47,9 +47,13 @@ fn test_field_inversion() {
 fn test_field_division() {
     for _ in 0..100 {
         let t = MyField::rand(&mut test_rng());
-        let inverse_t = MyField::ONE / t; 
+        let inverse_t = MyField::ONE / t;
 
-        assert_eq!(inverse_t, t.inverse().unwrap(), "Division and inverse are different"); 
+        assert_eq!(
+            inverse_t,
+            t.inverse().unwrap(),
+            "Division and inverse are different"
+        );
         assert_eq!(inverse_t * t, MyField::ONE, "Inverse computation failed");
     }
 }

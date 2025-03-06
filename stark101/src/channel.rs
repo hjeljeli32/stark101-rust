@@ -1,7 +1,7 @@
-use std::fmt;
+use crate::utils::concatenate_arrays;
 use hex::encode;
 use rs_merkle::{algorithms::Sha256, Hasher};
-use crate::utils::concatenate_arrays;
+use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
@@ -16,7 +16,7 @@ pub struct Member {
 }
 
 impl Member {
-    pub fn new(member_type: Type, data:Vec<u8>) -> Self {
+    pub fn new(member_type: Type, data: Vec<u8>) -> Self {
         Self { member_type, data }
     }
 }
@@ -51,6 +51,9 @@ impl Channel {
 
     pub fn send(&mut self, data: [u8; 32]) {
         self.state = Sha256::hash(&concatenate_arrays(&self.state, &data));
-        self.proof.push(Member { member_type: Type::Send, data: data.to_vec() });
+        self.proof.push(Member {
+            member_type: Type::Send,
+            data: data.to_vec(),
+        });
     }
 }
