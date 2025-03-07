@@ -12,7 +12,7 @@ pub fn run_part1() -> (
     DensePolynomial<MyField>,
     Vec<MyField>,
     MerkleTree<Sha256>,
-    Channel
+    Channel,
 ) {
     println!("Executing part 1...");
 
