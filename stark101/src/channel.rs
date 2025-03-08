@@ -1,5 +1,8 @@
-use crate::utils::concatenate_arrays;
+use crate::{finite_fields::MyField, utils::concatenate_arrays};
+use ark_ff::{AdditiveGroup, BigInteger, PrimeField};
 use hex::encode;
+use num_bigint::BigUint;
+use num_traits::cast::ToPrimitive;
 use rs_merkle::{algorithms::Sha256, Hasher};
 use std::fmt;
 
@@ -55,5 +58,17 @@ impl Channel {
             member_type: Type::Send,
             data: data.to_vec(),
         });
+    }
+
+    pub fn receive_random_field_element(&mut self) -> MyField {
+        let modulus: BigUint = MyField::MODULUS.into();
+        let random_number = BigUint::from_bytes_be(&self.state) % modulus;
+        let random_field_element = MyField::from(random_number.to_u64().unwrap());
+        self.state = Sha256::hash(&self.state);
+        self.proof.push(Member {
+            member_type: Type::Receive,
+            data: random_field_element.into_bigint().to_bytes_le().to_vec(),
+        });
+        random_field_element
     }
 }

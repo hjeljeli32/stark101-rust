@@ -76,9 +76,7 @@ pub fn run_part2(
     let mut t22_coeffs = vec![MyField::from(-1)];
     t22_coeffs.extend(vec![MyField::ZERO; 1023]);
     t22_coeffs.push(MyField::ONE);
-    let t22 = DensePolynomial {
-        coeffs: t22_coeffs,
-    }; // x^1024 - 1  
+    let t22 = DensePolynomial { coeffs: t22_coeffs }; // x^1024 - 1
     let t23 = DensePolynomial {
         coeffs: vec![-g.pow(&(vec![1021])), MyField::ONE],
     }; // x - g**1021
@@ -88,8 +86,11 @@ pub fn run_part2(
     let t25 = DensePolynomial {
         coeffs: vec![-g.pow(&(vec![1023])), MyField::ONE],
     }; // x - g**1023
-    let (denom2, _) = 
-        DenseOrSparsePolynomial::divide_with_q_and_r(&(&t22).into(), &(&(&t23 * &t24 * &t25)).into()).unwrap();
+    let (denom2, _) = DenseOrSparsePolynomial::divide_with_q_and_r(
+        &(&t22).into(),
+        &(&(&t23 * &t24 * &t25)).into(),
+    )
+    .unwrap();
     let (p2, r2) =
         DenseOrSparsePolynomial::divide_with_q_and_r(&(&numer2).into(), &(&denom2).into()).unwrap();
     assert_eq!(
@@ -101,5 +102,4 @@ pub fn run_part2(
         p2.evaluate(&MyField::from(31415)),
         MyField::from(2090051528_u32)
     );
-
 }
