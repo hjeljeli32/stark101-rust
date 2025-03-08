@@ -1,5 +1,5 @@
 use crate::{finite_fields::MyField, utils::concatenate_arrays};
-use ark_ff::{AdditiveGroup, BigInteger, PrimeField};
+use ark_ff::{BigInteger, PrimeField};
 use hex::encode;
 use num_bigint::BigUint;
 use num_traits::cast::ToPrimitive;

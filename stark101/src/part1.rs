@@ -9,6 +9,7 @@ pub fn run_part1() -> (
     Vec<MyField>,
     MyField,
     Vec<MyField>,
+    Vec<MyField>,
     DensePolynomial<MyField>,
     Vec<MyField>,
     MerkleTree<Sha256>,
@@ -95,5 +96,5 @@ pub fn run_part1() -> (
     let mut channel = Channel::new();
     channel.send(f_merkle.root().unwrap());
 
-    (a, g, G, h, H, f, f_eval, f_merkle, channel)
+    (a, g, G, h, H, eval_domain, f, f_eval, f_merkle, channel)
 }

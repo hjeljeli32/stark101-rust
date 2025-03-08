@@ -1,9 +1,9 @@
-use ark_ff::{AdditiveGroup, FftField, Field};
+use ark_ff::{AdditiveGroup, BigInteger, Field, PrimeField};
 use ark_poly::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
     Polynomial,
 };
-use rs_merkle::{algorithms::Sha256, MerkleTree};
+use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
 use stark101::{
     channel::Channel,
     finite_fields::MyField,
@@ -11,16 +11,11 @@ use stark101::{
 };
 
 pub fn run_part2(
-    a: Vec<MyField>,
     g: MyField,
-    G: Vec<MyField>,
-    h: MyField,
-    H: Vec<MyField>,
+    eval_domain: Vec<MyField>,
     f: DensePolynomial<MyField>,
-    f_eval: Vec<MyField>,
-    f_merkle: MerkleTree<Sha256>,
-    channel: Channel,
-) {
+    channel: &mut Channel,
+) -> (DensePolynomial<MyField>, Vec<MyField>, MerkleTree<Sha256>) {
     println!("Executing part 2...");
 
     // Rational Functions (That are in Fact Polynomials)
@@ -102,4 +97,25 @@ pub fn run_part2(
         p2.evaluate(&MyField::from(31415)),
         MyField::from(2090051528_u32)
     );
+    // Composition polynomial
+    let alpha0 = channel.receive_random_field_element();
+    let alpha1 = channel.receive_random_field_element();
+    let alpha2 = channel.receive_random_field_element();
+    let CP = &p0 * alpha0 + &p1 * alpha1 + &p2 * alpha2;
+    assert_eq!(CP.degree(), 1023, "The degree of CP must be 1023");
+    // Evaluate on the Coset
+    let CP_eval: Vec<MyField> = eval_domain
+        .iter()
+        .map(|point| CP.evaluate(&point))
+        .collect();
+    // Commitment
+    let leaves: Vec<[u8; 32]> = CP_eval
+        .iter()
+        .map(|eval| Sha256::hash(&eval.into_bigint().to_bytes_le()))
+        .collect();
+    let CP_merkle = MerkleTree::<Sha256>::from_leaves(&leaves);
+    // send on Channel
+    channel.send(CP_merkle.root().unwrap());
+
+    (CP, CP_eval, CP_merkle)
 }
