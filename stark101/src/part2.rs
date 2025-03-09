@@ -12,7 +12,7 @@ use stark101::{
 
 pub fn run_part2(
     g: MyField,
-    eval_domain: Vec<MyField>,
+    eval_domain: &Vec<MyField>,
     f: DensePolynomial<MyField>,
     channel: &mut Channel,
 ) -> (DensePolynomial<MyField>, Vec<MyField>, MerkleTree<Sha256>) {
