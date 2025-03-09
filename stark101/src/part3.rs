@@ -11,7 +11,7 @@ pub fn run_part3(
 ) {
     println!("Executing part 3...");
     // FRI folding
-    // Compute subsequent FRI domain 
+    // Compute subsequent FRI domain
     let half_domain_size = eval_domain.len() / 2;
     assert_eq!(
         eval_domain[100].pow(&(vec![2])),
