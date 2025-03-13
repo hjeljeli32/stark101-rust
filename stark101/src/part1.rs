@@ -1,7 +1,6 @@
-use ark_ff::{BigInteger, FftField, Field, PrimeField};
+use ark_ff::{FftField, Field};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
-use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
-use stark101::{channel::*, finite_fields::MyField, polynomials::*};
+use stark101::{channel::*, finite_fields::MyField, merkle::create_merkle_tree, polynomials::*};
 
 pub fn run_part1() -> (MyField, Vec<MyField>, DensePolynomial<MyField>, Channel) {
     println!("Executing part 1...");
@@ -76,14 +75,10 @@ pub fn run_part1() -> (MyField, Vec<MyField>, DensePolynomial<MyField>, Channel)
 
     // Commitments
     // We will use Sha256-based Merkle Trees as our commitment scheme
-    let leaves: Vec<[u8; 32]> = f_eval
-        .iter()
-        .map(|eval| Sha256::hash(&eval.into_bigint().to_bytes_le()))
-        .collect();
-    let f_merkle = MerkleTree::<Sha256>::from_leaves(&leaves);
+    let f_merkle = create_merkle_tree(&f_eval);
     // Channel
     let mut channel = Channel::new();
-    channel.send(f_merkle.root().unwrap());
+    channel.send(&f_merkle.root().unwrap().to_vec());
 
     (g, eval_domain, f, channel)
 }

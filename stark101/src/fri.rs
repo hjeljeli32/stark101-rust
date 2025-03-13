@@ -1,6 +1,7 @@
-use crate::finite_fields::MyField;
-use ark_ff::Field;
+use crate::{channel::Channel, finite_fields::MyField, merkle::create_merkle_tree};
+use ark_ff::{BigInteger, Field, PrimeField};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
+use rs_merkle::{algorithms::Sha256, MerkleTree};
 
 // Computes the subsequent FRI domain by taking the first half of the current FRI domain (dropping the second half),
 // and squaring each of its elements.
@@ -43,4 +44,42 @@ pub fn compute_next_fri_layer(
         .map(|point| next_poly.evaluate(&point))
         .collect();
     (next_poly, next_domain, next_layer)
+}
+
+// Computes the FRI polynomials, the FRI domains, the FRI layers and the FRI Merkle trees
+// The method contains a loop, in each iteration of which we extend these four lists, using the last element in each.
+// The iteration should stop once the last FRI polynomial is of degree 0, that is - when the last FRI polynomial is just
+// a constant.
+pub fn generate_fri_commitments(
+    poly: &DensePolynomial<MyField>,
+    poly_domain: &Vec<MyField>,
+    poly_eval: &Vec<MyField>,
+    poly_merkle: &MerkleTree<Sha256>,
+    channel: &mut Channel,
+) -> (
+    Vec<DensePolynomial<MyField>>,
+    Vec<Vec<MyField>>,
+    Vec<Vec<MyField>>,
+    Vec<MerkleTree<Sha256>>,
+) {
+    let mut fri_polys = vec![poly.clone()];
+    let mut fri_domains = vec![poly_domain.clone()];
+    let mut fri_layers = vec![poly_eval.clone()];
+    let mut fri_merkles = vec![poly_merkle.clone()];
+    while fri_polys.last().unwrap().degree() > 0 {
+        let beta = channel.receive_random_field_element();
+        let (next_poly, next_domain, next_layer) =
+            compute_next_fri_layer(fri_polys.last().unwrap(), fri_domains.last().unwrap(), beta);
+        fri_polys.push(next_poly);
+        fri_domains.push(next_domain);
+        fri_layers.push(next_layer);
+        fri_merkles.push(create_merkle_tree(&fri_layers.last().unwrap()));
+        channel.send(&fri_merkles.last().unwrap().root().unwrap().to_vec());
+    }
+    channel.send(
+        &fri_polys.last().unwrap().coeffs[0]
+            .into_bigint()
+            .to_bytes_le(),
+    );
+    (fri_polys, fri_domains, fri_layers, fri_merkles)
 }

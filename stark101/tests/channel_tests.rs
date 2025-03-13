@@ -17,7 +17,7 @@ fn test_new_channel() {
 fn test_send() {
     let mut channel = Channel::new();
     let data = [01u8; 32];
-    channel.send(data);
+    channel.send(&data.to_vec());
     assert_eq!(
         encode(channel.state),
         "5c85955f709283ecce2b74f1b1552918819f390911816e7bb466805a38ab87f3",
@@ -35,7 +35,7 @@ fn test_receive_random_field_elements() {
     let mut channel = Channel::new();
     // we first send some data otherwise if we receive directly random field element it will be equal to 0
     let data = [01u8; 32];
-    channel.send(data);
+    channel.send(&data.to_vec());
     // we receive a first random field element
     let _ = channel.receive_random_field_element();
     assert_eq!(

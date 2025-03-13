@@ -1,4 +1,4 @@
-use crate::{finite_fields::MyField, utils::concatenate_arrays};
+use crate::{finite_fields::MyField, utils::concat_slices};
 use ark_ff::{BigInteger, PrimeField};
 use hex::encode;
 use num_bigint::BigUint;
@@ -52,8 +52,8 @@ impl Channel {
         }
     }
 
-    pub fn send(&mut self, data: [u8; 32]) {
-        self.state = Sha256::hash(&concatenate_arrays(&self.state, &data));
+    pub fn send(&mut self, data: &Vec<u8>) {
+        self.state = Sha256::hash(&concat_slices(&self.state, &data.as_slice()).as_slice());
         self.proof.push(Member {
             member_type: Type::Send,
             data: data.to_vec(),

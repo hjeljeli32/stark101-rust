@@ -1,12 +1,13 @@
-use ark_ff::{AdditiveGroup, BigInteger, Field, PrimeField};
+use ark_ff::{AdditiveGroup, Field};
 use ark_poly::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
     Polynomial,
 };
-use rs_merkle::{algorithms::Sha256, Hasher, MerkleTree};
+use rs_merkle::{algorithms::Sha256, MerkleTree};
 use stark101::{
     channel::Channel,
     finite_fields::MyField,
+    merkle::create_merkle_tree,
     polynomials::{compose_polynomials, pow},
 };
 
@@ -109,13 +110,9 @@ pub fn run_part2(
         .map(|point| CP.evaluate(&point))
         .collect();
     // Commitment
-    let leaves: Vec<[u8; 32]> = CP_eval
-        .iter()
-        .map(|eval| Sha256::hash(&eval.into_bigint().to_bytes_le()))
-        .collect();
-    let CP_merkle = MerkleTree::<Sha256>::from_leaves(&leaves);
+    let CP_merkle = create_merkle_tree(&CP_eval);
     // send on Channel
-    channel.send(CP_merkle.root().unwrap());
+    channel.send(&CP_merkle.root().unwrap().to_vec());
 
     (CP, CP_eval, CP_merkle)
 }

@@ -1,8 +1,16 @@
 use crate::finite_fields::MyField;
-use crate::utils::concatenate_arrays;
+use crate::utils::concat_slices;
 use ark_ff::{BigInteger, PrimeField};
 use rs_merkle::algorithms::Sha256;
-use rs_merkle::Hasher;
+use rs_merkle::{Hasher, MerkleTree};
+
+pub fn create_merkle_tree(data: &Vec<MyField>) -> MerkleTree<Sha256> {
+    let leaves: Vec<[u8; 32]> = data
+        .iter()
+        .map(|eval| Sha256::hash(&eval.into_bigint().to_bytes_le()))
+        .collect();
+    MerkleTree::<Sha256>::from_leaves(&leaves)
+}
 
 // Verifies that a decommitment matches with authentication path included in a Merkle proof
 pub fn verify_decommitment(
@@ -16,9 +24,9 @@ pub fn verify_decommitment(
     let mut hash = content_hash;
     for i in 0..authentication_path.len() {
         if leaf_id & 1 == 1 {
-            hash = Sha256::hash(&concatenate_arrays(&authentication_path[i], &hash));
+            hash = Sha256::hash(&concat_slices(&authentication_path[i], &hash).as_slice());
         } else {
-            hash = Sha256::hash(&concatenate_arrays(&hash, &authentication_path[i]));
+            hash = Sha256::hash(&concat_slices(&hash, &authentication_path[i]).as_slice());
         }
         leaf_id = leaf_id >> 1;
     }

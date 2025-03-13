@@ -1,20 +1,15 @@
-use ark_ff::{BigInteger, PrimeField, UniformRand};
+use ark_ff::UniformRand;
 use ark_std::{rand::Rng, test_rng};
 use hex::encode;
-use rs_merkle::Hasher;
-use rs_merkle::{algorithms::Sha256, MerkleTree};
 use stark101::finite_fields::MyField;
 use stark101::merkle::*;
 
 #[test]
 fn test_create_tree_with_2_leaves() {
-    let leaves = [
-        Sha256::hash(&MyField::from(1).into_bigint().to_bytes_le()), // H(0100000000000000)
-        Sha256::hash(&MyField::from(2).into_bigint().to_bytes_le()), // H(0200000000000000)
-    ];
-    // H0 = 7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8
-    // H1 = d86e8112f3c4c4442126f8e9f44f16867da487f29052bf91b810457db34209a4
-    let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
+    let data = vec![MyField::from(1), MyField::from(2)];
+    let merkle_tree = create_merkle_tree(&data);
+    // H0 = H(0100000000000000) = 7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8
+    // H1 = H(0200000000000000) = d86e8112f3c4c4442126f8e9f44f16867da487f29052bf91b810457db34209a4
     let root = merkle_tree.root().unwrap();
     assert_eq!(
         encode(root),
@@ -25,17 +20,17 @@ fn test_create_tree_with_2_leaves() {
 
 #[test]
 fn test_create_tree_with_4_leaves() {
-    let leaves = [
-        Sha256::hash(&MyField::from(1).into_bigint().to_bytes_le()), // H(0100000000000000)
-        Sha256::hash(&MyField::from(2).into_bigint().to_bytes_le()), // H(0200000000000000)
-        Sha256::hash(&MyField::from(3).into_bigint().to_bytes_le()), // H(0300000000000000)
-        Sha256::hash(&MyField::from(4).into_bigint().to_bytes_le()), // H(0400000000000000)
+    let data = vec![
+        MyField::from(1),
+        MyField::from(2),
+        MyField::from(3),
+        MyField::from(4),
     ];
-    let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
-    // H00 = 7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8
-    // H01 = d86e8112f3c4c4442126f8e9f44f16867da487f29052bf91b810457db34209a4
-    // H10 = 35be322d094f9d154a8aba4733b8497f180353bd7ae7b0a15f90b586b549f28b
-    // H11 = f0a0278e4372459cca6159cd5e71cfee638302a7b9ca9b05c34181ac0a65ac5d
+    let merkle_tree = create_merkle_tree(&data);
+    // H00 = H(0100000000000000) = 7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8
+    // H01 = H(0200000000000000) = d86e8112f3c4c4442126f8e9f44f16867da487f29052bf91b810457db34209a4
+    // H10 = H(0300000000000000) = 35be322d094f9d154a8aba4733b8497f180353bd7ae7b0a15f90b586b549f28b
+    // H11 = H(0400000000000000) = f0a0278e4372459cca6159cd5e71cfee638302a7b9ca9b05c34181ac0a65ac5d
     // H0 = c06b7afada32b8e5e3e62b0a563e632f68dcef97d8dd39de5c1b3fe4132aaea1
     // H1 = 3b95ab12601f8fa42464588a735ac0ffda59c8c49e79712770229adf2b9e6ada
     let root = merkle_tree.root().unwrap();
@@ -48,13 +43,13 @@ fn test_create_tree_with_4_leaves() {
 
 #[test]
 fn test_get_authentication_path() {
-    let leaves = [
-        Sha256::hash(&MyField::from(1).into_bigint().to_bytes_le()),
-        Sha256::hash(&MyField::from(2).into_bigint().to_bytes_le()),
-        Sha256::hash(&MyField::from(3).into_bigint().to_bytes_le()),
-        Sha256::hash(&MyField::from(4).into_bigint().to_bytes_le()),
+    let data = vec![
+        MyField::from(1),
+        MyField::from(2),
+        MyField::from(3),
+        MyField::from(4),
     ];
-    let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
+    let merkle_tree = create_merkle_tree(&data);
     let proof = merkle_tree.proof(&[1]); // proof for 2nd element
     let authentication_path = proof.proof_hashes();
     assert_eq!(
@@ -76,13 +71,13 @@ fn test_get_authentication_path() {
 
 #[test]
 fn test_verify_decommitment() {
-    let leaves = [
-        Sha256::hash(&MyField::from(1).into_bigint().to_bytes_le()),
-        Sha256::hash(&MyField::from(2).into_bigint().to_bytes_le()),
-        Sha256::hash(&MyField::from(3).into_bigint().to_bytes_le()),
-        Sha256::hash(&MyField::from(4).into_bigint().to_bytes_le()),
+    let data = vec![
+        MyField::from(1),
+        MyField::from(2),
+        MyField::from(3),
+        MyField::from(4),
     ];
-    let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
+    let merkle_tree = create_merkle_tree(&data);
     let root = merkle_tree.root().unwrap();
     let proof2 = merkle_tree.proof(&[1]); // proof for 2nd element
     assert!(
@@ -102,11 +97,7 @@ fn test_verify_decommitment_random() {
     for i in 1..=15 {
         let data_length = 1 << i;
         let data: Vec<MyField> = (0..data_length).map(|_| MyField::rand(rng)).collect();
-        let leaves: Vec<[u8; 32]> = data
-            .iter()
-            .map(|x| Sha256::hash(&x.into_bigint().to_bytes_le()))
-            .collect();
-        let merkle_tree = MerkleTree::<Sha256>::from_leaves(&leaves);
+        let merkle_tree = create_merkle_tree(&data);
         let root = merkle_tree.root().unwrap();
         let leaf_id = rng.gen_range(0..data_length);
         let proof = merkle_tree.proof(&[leaf_id]);

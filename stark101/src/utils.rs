@@ -1,7 +1,8 @@
-// Concatenates two arrays of 32 bytes
-pub fn concatenate_arrays(arr1: &[u8; 32], arr2: &[u8; 32]) -> [u8; 64] {
-    let mut result = [0u8; 64];
-    result[..32].copy_from_slice(arr1);
-    result[32..].copy_from_slice(arr2);
-    result
+// Concatenates two slices of bytes
+pub fn concat_slices(slice1: &[u8], slice2: &[u8]) -> Vec<u8> {
+    let mut result = Vec::with_capacity(slice1.len() + slice2.len()); // Pre-allocate memory
+    result.extend_from_slice(slice1); // Append the first slice
+    result.extend_from_slice(slice2); // Append the second slice
+
+    result // Return the concatenated vector
 }
