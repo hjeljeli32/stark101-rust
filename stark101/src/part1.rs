@@ -1,8 +1,16 @@
 use ark_ff::{FftField, Field};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
+use rs_merkle::{algorithms::Sha256, MerkleTree};
 use stark101::{channel::*, finite_fields::MyField, merkle::create_merkle_tree, polynomials::*};
 
-pub fn run_part1() -> (MyField, Vec<MyField>, DensePolynomial<MyField>, Channel) {
+pub fn run_part1() -> (
+    MyField,
+    Vec<MyField>,
+    DensePolynomial<MyField>,
+    Vec<MyField>,
+    MerkleTree<Sha256>,
+    Channel,
+) {
     println!("Executing part 1...");
 
     // FibonacciSq Trace
@@ -80,5 +88,5 @@ pub fn run_part1() -> (MyField, Vec<MyField>, DensePolynomial<MyField>, Channel)
     let mut channel = Channel::new();
     channel.send(&f_merkle.root().unwrap().to_vec());
 
-    (g, eval_domain, f, channel)
+    (g, eval_domain, f, f_eval, f_merkle, channel)
 }
