@@ -1,9 +1,6 @@
 use ark_poly::univariate::DensePolynomial;
 use rs_merkle::{algorithms::Sha256, MerkleTree};
-use stark101::{
-    channel::{self, Channel},
-    finite_fields::MyField,
-};
+use stark101::{channel::Channel, finite_fields::MyField};
 
 pub fn run_part4(
     f_eval: Vec<MyField>,

@@ -4,6 +4,7 @@ use ark_ff::{BigInteger, PrimeField};
 use rs_merkle::algorithms::Sha256;
 use rs_merkle::{Hasher, MerkleTree};
 
+// Creates Merkle Tree using given data (elements of MyField)
 pub fn create_merkle_tree(data: &Vec<MyField>) -> MerkleTree<Sha256> {
     let leaves: Vec<[u8; 32]> = data
         .iter()
@@ -12,11 +13,16 @@ pub fn create_merkle_tree(data: &Vec<MyField>) -> MerkleTree<Sha256> {
     MerkleTree::<Sha256>::from_leaves(&leaves)
 }
 
+// Gets authentication path of an index
+pub fn get_authentication_path(merkle: &MerkleTree<Sha256>, leaf_id: usize) -> Vec<[u8; 32]> {
+    merkle.proof(&[leaf_id]).proof_hashes().to_vec()
+}
+
 // Verifies that a decommitment matches with authentication path included in a Merkle proof
 pub fn verify_decommitment(
     leaf_id: usize,
     leaf_data: MyField,
-    authentication_path: &[[u8; 32]],
+    authentication_path: Vec<[u8; 32]>,
     root: [u8; 32],
 ) -> bool {
     let mut leaf_id = leaf_id;

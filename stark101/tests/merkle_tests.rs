@@ -50,8 +50,7 @@ fn test_get_authentication_path() {
         MyField::from(4),
     ];
     let merkle_tree = create_merkle_tree(&data);
-    let proof = merkle_tree.proof(&[1]); // proof for 2nd element
-    let authentication_path = proof.proof_hashes();
+    let authentication_path = get_authentication_path(&merkle_tree, 1); // authentication-path of 2nd element
     assert_eq!(
         authentication_path.len(),
         2,
@@ -79,15 +78,15 @@ fn test_verify_decommitment() {
     ];
     let merkle_tree = create_merkle_tree(&data);
     let root = merkle_tree.root().unwrap();
-    let proof2 = merkle_tree.proof(&[1]); // proof for 2nd element
+    let authentication_path2 = get_authentication_path(&merkle_tree, 1); // authentication-path of 2nd element
     assert!(
-        verify_decommitment(1, MyField::from(2), proof2.proof_hashes(), root),
-        "verification of decommitment failed"
+        verify_decommitment(1, MyField::from(2), authentication_path2, root),
+        "verification of decommitment of 2nd element failed"
     );
-    let proof3 = merkle_tree.proof(&[2]); // proof for 3rd element
+    let authentication_path3 = get_authentication_path(&merkle_tree, 2); // authentication-path of 3rd element
     assert!(
-        verify_decommitment(2, MyField::from(3), proof3.proof_hashes(), root),
-        "verification of decommitment failed"
+        verify_decommitment(2, MyField::from(3), authentication_path3, root),
+        "verification of decommitment of 3rd element failed"
     );
 }
 
@@ -100,9 +99,9 @@ fn test_verify_decommitment_random() {
         let merkle_tree = create_merkle_tree(&data);
         let root = merkle_tree.root().unwrap();
         let leaf_id = rng.gen_range(0..data_length);
-        let proof = merkle_tree.proof(&[leaf_id]);
+        let authenctication_path = get_authentication_path(&merkle_tree, leaf_id);
         assert!(
-            verify_decommitment(leaf_id, data[leaf_id], proof.proof_hashes(), root),
+            verify_decommitment(leaf_id, data[leaf_id], authenctication_path, root),
             "verification of decommitment failed with length: {}",
             data_length
         );
