@@ -80,12 +80,12 @@ fn test_verify_decommitment() {
     let root = merkle_tree.root().unwrap();
     let authentication_path2 = get_authentication_path(&merkle_tree, 1); // authentication-path of 2nd element
     assert!(
-        verify_decommitment(1, MyField::from(2), authentication_path2, root),
+        verify_decommitment(1, MyField::from(2), &authentication_path2, root),
         "verification of decommitment of 2nd element failed"
     );
     let authentication_path3 = get_authentication_path(&merkle_tree, 2); // authentication-path of 3rd element
     assert!(
-        verify_decommitment(2, MyField::from(3), authentication_path3, root),
+        verify_decommitment(2, MyField::from(3), &authentication_path3, root),
         "verification of decommitment of 3rd element failed"
     );
 }
@@ -99,9 +99,9 @@ fn test_verify_decommitment_random() {
         let merkle_tree = create_merkle_tree(&data);
         let root = merkle_tree.root().unwrap();
         let leaf_id = rng.gen_range(0..data_length);
-        let authenctication_path = get_authentication_path(&merkle_tree, leaf_id);
+        let authentication_path = get_authentication_path(&merkle_tree, leaf_id);
         assert!(
-            verify_decommitment(leaf_id, data[leaf_id], authenctication_path, root),
+            verify_decommitment(leaf_id, data[leaf_id], &authentication_path, root),
             "verification of decommitment failed with length: {}",
             data_length
         );

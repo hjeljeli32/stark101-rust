@@ -22,7 +22,7 @@ pub fn get_authentication_path(merkle: &MerkleTree<Sha256>, leaf_id: usize) -> V
 pub fn verify_decommitment(
     leaf_id: usize,
     leaf_data: MyField,
-    authentication_path: Vec<[u8; 32]>,
+    authentication_path: &Vec<[u8; 32]>,
     root: [u8; 32],
 ) -> bool {
     let mut leaf_id = leaf_id;

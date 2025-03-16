@@ -16,6 +16,7 @@ pub fn run_part3(
     Vec<MerkleTree<Sha256>>,
 ) {
     println!("Executing part 3...");
+
     // FRI folding
     // Compute subsequent FRI domain
     let half_domain_size = eval_domain.len() / 2;

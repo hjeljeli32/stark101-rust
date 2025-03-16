@@ -1,4 +1,10 @@
-use crate::{channel::Channel, finite_fields::MyField, merkle::create_merkle_tree};
+use std::iter::zip;
+
+use crate::{
+    channel::Channel,
+    finite_fields::MyField,
+    merkle::{create_merkle_tree, get_authentication_path},
+};
 use ark_ff::{BigInteger, Field, PrimeField};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use rs_merkle::{algorithms::Sha256, MerkleTree};
@@ -82,4 +88,73 @@ pub fn generate_fri_commitments(
             .to_bytes_le(),
     );
     (fri_polys, fri_domains, fri_layers, fri_merkles)
+}
+
+// Decommits on FRI layers given an index by sending the following data
+// 1. The element of the FRI layer at the given index (using fri_layers).
+// 2. Its authentication path (using the corresponding Merkle tree from fri_merkles).
+// 3. The element's FRI sibling
+// 4. The authentication path of the element's sibling (using the same merkle tree).
+pub fn decommit_on_fri_layers(
+    id: usize,
+    fri_layers: Vec<Vec<MyField>>,
+    fri_merkles: Vec<MerkleTree<Sha256>>,
+    channel: &mut Channel,
+) {
+    for (layer, merkle) in zip(
+        &fri_layers[..fri_layers.len() - 1],
+        &fri_merkles[..fri_merkles.len() - 1],
+    ) {
+        let id = id % layer.len();
+        let sibling_id = (id + layer.len() / 2) % layer.len();
+        channel.send(&layer[id].into_bigint().to_bytes_le()); // The element from the current layer
+        channel.send(
+            &get_authentication_path(&merkle, id)
+                .iter()
+                .flat_map(|arr| arr.to_vec())
+                .collect(),
+        ); // The authentication path for this element
+        channel.send(&layer[sibling_id].into_bigint().to_bytes_le()); // The element's sibling in the current layer
+        channel.send(
+            &get_authentication_path(&merkle, sibling_id)
+                .iter()
+                .flat_map(|arr| arr.to_vec())
+                .collect(),
+        ); // The authentication path for the sibling element
+    }
+    channel.send(&fri_layers.last().unwrap()[0].into_bigint().to_bytes_le()); // The last element (constant polynomial)
+}
+
+// Decommits on the Trace polynomial by sending the following data
+// The value f(x) with its authentication path.
+// The value f(gx) with its authentication path.
+// The value f(g^2x) with its authentication path
+pub fn decommit_on_query(
+    id: usize,
+    f_eval: &Vec<MyField>,
+    f_merkle: &MerkleTree<Sha256>,
+    channel: &mut Channel,
+) -> () {
+    assert!(id + 16 < f_eval.len());
+    channel.send(&f_eval[id].into_bigint().to_bytes_le()); // f(x)
+    channel.send(
+        &get_authentication_path(&f_merkle, id)
+            .iter()
+            .flat_map(|arr| arr.to_vec())
+            .collect(),
+    ); // authentication path of f(x)
+    channel.send(&f_eval[id + 8].into_bigint().to_bytes_le()); // f(gx)
+    channel.send(
+        &get_authentication_path(&f_merkle, id + 8)
+            .iter()
+            .flat_map(|arr| arr.to_vec())
+            .collect(),
+    ); // authentication path of f(gx)
+    channel.send(&f_eval[id + 16].into_bigint().to_bytes_le()); // f(g^2x)
+    channel.send(
+        &get_authentication_path(&f_merkle, id + 16)
+            .iter()
+            .flat_map(|arr| arr.to_vec())
+            .collect(),
+    ); // authentication path of f(g^2x)
 }

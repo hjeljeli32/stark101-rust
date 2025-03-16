@@ -70,7 +70,7 @@ pub fn run_part1() -> (
             "element of eval_domain is wrong!"
         );
     }
-    // Evaluate on a Coset
+    // Evaluate on the Coset
     let f_eval: Vec<MyField> = eval_domain.iter().map(|point| f.evaluate(&point)).collect();
     assert!(
         f_eval[0] == MyField::from(576067152),
