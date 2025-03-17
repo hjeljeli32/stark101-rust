@@ -308,7 +308,7 @@ fn test_decommit_on_query() {
         "verification of authentication path of f(x) failed"
     );
     // test f(gx) and its authentication path
-    let f_gx = f.evaluate(&(w * h.pow(&(vec![2+8]))));
+    let f_gx = f.evaluate(&(w * h.pow(&(vec![2 + 8]))));
     assert_eq!(
         channel.proof[3],
         Member::new(Type::Send, f_gx.into_bigint().to_bytes_le()),
@@ -320,11 +320,11 @@ fn test_decommit_on_query() {
         .map(|chunk| <[u8; 32]>::try_from(chunk).unwrap())
         .collect();
     assert!(
-        verify_decommitment(2+8, f_gx, &authentication_path_f_gx, root),
+        verify_decommitment(2 + 8, f_gx, &authentication_path_f_gx, root),
         "verification of authentication path of f(gx) failed"
     );
     // test f(g^2x) and its authentication path
-    let f_g2x = f.evaluate(&(w * h.pow(&(vec![2+16]))));
+    let f_g2x = f.evaluate(&(w * h.pow(&(vec![2 + 16]))));
     assert_eq!(
         channel.proof[5],
         Member::new(Type::Send, f_g2x.into_bigint().to_bytes_le()),
@@ -336,7 +336,7 @@ fn test_decommit_on_query() {
         .map(|chunk| <[u8; 32]>::try_from(chunk).unwrap())
         .collect();
     assert!(
-        verify_decommitment(2+16, f_g2x, &authentication_path_f_g2x, root),
+        verify_decommitment(2 + 16, f_g2x, &authentication_path_f_g2x, root),
         "verification of authentication path of f(gx) failed"
     );
 }

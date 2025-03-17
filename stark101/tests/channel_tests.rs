@@ -75,3 +75,42 @@ fn test_receive_random_field_elements() {
         "second received field element is wrong"
     );
 }
+
+#[test]
+fn test_receive_random_integers() {
+    let mut channel = Channel::new();
+    // we first send some data otherwise if we receive directly random integer it will be equal to 0
+    let data = [01u8; 32];
+    channel.send(&data.to_vec());
+    // we receive a first random int
+    let (min, max) = (0, 8191);
+    let int0 = channel.receive_random_int(min, max);
+    assert!(int0 >= min, "random int must greater than min");
+    assert!(int0 <= max, "random int must less than max");
+    assert_eq!(
+        encode(channel.state),
+        "705ede9d42476fc3e5a978b042ce790a193678f46d19f47ec4ab46539c47b76d",
+        "state is wrong"
+    );
+    assert_eq!(channel.proof.len(), 2, "proof should contain 2 members");
+    assert_eq!(
+        channel.proof[1],
+        Member::new(Type::Receive, 2035_u64.to_le_bytes().to_vec()),
+        "first received int is wrong"
+    );
+    // we receive a second random int
+    let int1 = channel.receive_random_int(min, max);
+    assert!(int1 >= min, "random int must greater than min");
+    assert!(int1 <= max, "random int must less than max");
+    assert_eq!(
+        encode(channel.state),
+        "f6bca4ad35bf0e47f352f618eebbb6beb4d5398706ce39156e8f4c9fd8f50a46",
+        "state is wrong"
+    );
+    assert_eq!(channel.proof.len(), 3, "proof should contain 3 members");
+    assert_eq!(
+        channel.proof[2],
+        Member::new(Type::Receive, 5997_u64.to_le_bytes().to_vec()),
+        "second received int is wrong"
+    );
+}
