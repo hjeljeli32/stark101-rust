@@ -1,18 +1,15 @@
+use crate::{channel::Channel, finite_fields::MyField, fri::generate_fri_commitments};
 use ark_ff::Field;
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use rs_merkle::{algorithms::Sha256, MerkleTree};
-use stark101::{channel::Channel, finite_fields::MyField, fri::generate_fri_commitments};
 
 pub fn run_part3(
-    eval_domain: Vec<MyField>,
-    CP: DensePolynomial<MyField>,
-    CP_eval: Vec<MyField>,
-    CP_merkle: MerkleTree<Sha256>,
+    eval_domain: &Vec<MyField>,
+    CP: &DensePolynomial<MyField>,
+    CP_eval: &Vec<MyField>,
+    CP_merkle: &MerkleTree<Sha256>,
     channel: &mut Channel,
-) -> (
-    Vec<Vec<MyField>>,
-    Vec<MerkleTree<Sha256>>,
-) {
+) -> (Vec<Vec<MyField>>, Vec<MerkleTree<Sha256>>) {
     println!("Executing part 3...");
 
     // FRI folding

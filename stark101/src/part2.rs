@@ -1,30 +1,29 @@
+use crate::{
+    channel::Channel,
+    finite_fields::MyField,
+    merkle::create_merkle_tree,
+    polynomials::{compose_polynomials, pow},
+};
 use ark_ff::{AdditiveGroup, Field};
 use ark_poly::{
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
     Polynomial,
 };
 use rs_merkle::{algorithms::Sha256, MerkleTree};
-use stark101::{
-    channel::Channel,
-    finite_fields::MyField,
-    merkle::create_merkle_tree,
-    polynomials::{compose_polynomials, pow},
-};
 
 pub fn run_part2(
     g: MyField,
     eval_domain: &Vec<MyField>,
-    f: DensePolynomial<MyField>,
+    f: &DensePolynomial<MyField>,
     channel: &mut Channel,
 ) -> (DensePolynomial<MyField>, Vec<MyField>, MerkleTree<Sha256>) {
     println!("Executing part 2...");
 
     // Rational Functions (That are in Fact Polynomials)
     // The first constraint
-    let numer0 = &f
-        - &DensePolynomial {
-            coeffs: vec![MyField::ONE],
-        };
+    let numer0 = f - &DensePolynomial {
+        coeffs: vec![MyField::ONE],
+    };
     let denom0 = DensePolynomial {
         coeffs: vec![-MyField::ONE, MyField::ONE],
     }; // x-1
@@ -40,10 +39,9 @@ pub fn run_part2(
         MyField::from(2509888982_u32)
     );
     // The second constraint
-    let numer1 = &f
-        - &DensePolynomial {
-            coeffs: vec![MyField::from(2338775057_u32)],
-        };
+    let numer1 = f - &DensePolynomial {
+        coeffs: vec![MyField::from(2338775057_u32)],
+    };
     let denom1 = DensePolynomial {
         coeffs: vec![-g.pow(&(vec![1022])), MyField::ONE],
     }; // x - g**1022

@@ -1,5 +1,5 @@
+use crate::{channel::Channel, finite_fields::MyField, fri::decommit_on_query};
 use rs_merkle::{algorithms::Sha256, MerkleTree};
-use stark101::{channel::Channel, finite_fields::MyField, fri::decommit_on_query};
 
 pub fn run_part4(
     f_eval: Vec<MyField>,
