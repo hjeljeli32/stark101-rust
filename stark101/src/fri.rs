@@ -97,8 +97,8 @@ pub fn generate_fri_commitments(
 // 4. The authentication path of the element's sibling (using the same merkle tree).
 pub fn decommit_on_fri_layers(
     id: usize,
-    fri_layers: Vec<Vec<MyField>>,
-    fri_merkles: Vec<MerkleTree<Sha256>>,
+    fri_layers: &Vec<Vec<MyField>>,
+    fri_merkles: &Vec<MerkleTree<Sha256>>,
     channel: &mut Channel,
 ) {
     for (layer, merkle) in zip(
@@ -128,11 +128,14 @@ pub fn decommit_on_fri_layers(
 // Decommits on the Trace polynomial by sending the following data
 // The value f(x) with its authentication path.
 // The value f(gx) with its authentication path.
-// The value f(g^2x) with its authentication path
+// The value f(g^2x) with its authentication path.
+// Finally, decommits on FRI layers
 pub fn decommit_on_query(
     id: usize,
     f_eval: &Vec<MyField>,
     f_merkle: &MerkleTree<Sha256>,
+    fri_layers: &Vec<Vec<MyField>>,
+    fri_merkles: &Vec<MerkleTree<Sha256>>,
     channel: &mut Channel,
 ) -> () {
     assert!(id + 16 < f_eval.len());
@@ -157,4 +160,5 @@ pub fn decommit_on_query(
             .flat_map(|arr| arr.to_vec())
             .collect(),
     ); // authentication path of f(g^2x)
+    decommit_on_fri_layers(id, fri_layers, fri_merkles, channel);
 }

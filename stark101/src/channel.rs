@@ -73,7 +73,9 @@ impl Channel {
     }
 
     pub fn receive_random_int(&mut self, min: u64, max: u64) -> u64 {
-        let random_int = (min + BigUint::from_bytes_be(&self.state) % (max - min + 1)).to_u64().unwrap();
+        let random_int = (min + BigUint::from_bytes_be(&self.state) % (max - min + 1))
+            .to_u64()
+            .unwrap();
         self.state = Sha256::hash(&self.state);
         self.proof.push(Member {
             member_type: Type::Receive,

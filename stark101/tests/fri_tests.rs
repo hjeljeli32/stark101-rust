@@ -8,7 +8,7 @@ use stark101::{
     channel::{Channel, Member, Type},
     finite_fields::MyField,
     fri::*,
-    merkle::{create_merkle_tree, get_authentication_path, verify_decommitment},
+    merkle::{create_merkle_tree, verify_decommitment},
 };
 
 #[test]
@@ -179,10 +179,11 @@ fn test_decommit_on_fri_layers() {
     // we first send some data otherwise if we receive directly random field element it will be equal to 0
     let data = [01u8; 32];
     channel.send(&data.to_vec());
+    // we generate fri commitments
     let (_, _, fri_layers, fri_merkles) =
         generate_fri_commitments(&poly, &poly_domain, &poly_eval, &poly_merkle, &mut channel);
-    decommit_on_fri_layers(1, fri_layers, fri_merkles, &mut channel);
-    assert_eq!(channel.proof.len(), 15, "proof must contain 15 elements"); // 9 sending added by decommit_on_fri_layers
+    decommit_on_fri_layers(1, &fri_layers, &fri_merkles, &mut channel);
+    assert_eq!(channel.proof.len(), 15, "proof must contain 15 elements"); // 9 sendings added by decommit_on_fri_layers
     assert_eq!(
         channel.proof[6],
         Member::new(Type::Send, (49_u64).to_le_bytes().to_vec())
@@ -286,19 +287,29 @@ fn test_decommit_on_query() {
     let mut channel = Channel::new();
     let root = f_merkle.root().unwrap();
     channel.send(&root.to_vec());
+    // we generate fri commitments
+    let (_, _, fri_layers, fri_merkles) =
+        generate_fri_commitments(&f, &eval_domain, &f_eval, &f_merkle, &mut channel);
     // set query index
     let id = 2;
-    decommit_on_query(id, &f_eval, &f_merkle, &mut channel);
+    decommit_on_query(
+        id,
+        &f_eval,
+        &f_merkle,
+        &fri_layers,
+        &fri_merkles,
+        &mut channel,
+    );
     // test length of proof
-    assert_eq!(channel.proof.len(), 7, "proof must contain 7 elements");
+    assert_eq!(channel.proof.len(), 21, "proof must contain 21 elements");
     // test f(x) and its authentication path
     let f_x = f.evaluate(&(w * h.pow(&(vec![2]))));
     assert_eq!(
-        channel.proof[1],
+        channel.proof[6],
         Member::new(Type::Send, f_x.into_bigint().to_bytes_le()),
         "test of f(x) failed"
     );
-    let authentication_path_f_x: Vec<[u8; 32]> = channel.proof[2]
+    let authentication_path_f_x: Vec<[u8; 32]> = channel.proof[7]
         .data
         .chunks_exact(32)
         .map(|chunk| <[u8; 32]>::try_from(chunk).unwrap())
@@ -310,11 +321,11 @@ fn test_decommit_on_query() {
     // test f(gx) and its authentication path
     let f_gx = f.evaluate(&(w * h.pow(&(vec![2 + 8]))));
     assert_eq!(
-        channel.proof[3],
+        channel.proof[8],
         Member::new(Type::Send, f_gx.into_bigint().to_bytes_le()),
         "test of f(gx) failed"
     );
-    let authentication_path_f_gx: Vec<[u8; 32]> = channel.proof[4]
+    let authentication_path_f_gx: Vec<[u8; 32]> = channel.proof[9]
         .data
         .chunks_exact(32)
         .map(|chunk| <[u8; 32]>::try_from(chunk).unwrap())
@@ -326,11 +337,11 @@ fn test_decommit_on_query() {
     // test f(g^2x) and its authentication path
     let f_g2x = f.evaluate(&(w * h.pow(&(vec![2 + 16]))));
     assert_eq!(
-        channel.proof[5],
+        channel.proof[10],
         Member::new(Type::Send, f_g2x.into_bigint().to_bytes_le()),
         "test of f(gx) failed"
     );
-    let authentication_path_f_g2x: Vec<[u8; 32]> = channel.proof[6]
+    let authentication_path_f_g2x: Vec<[u8; 32]> = channel.proof[11]
         .data
         .chunks_exact(32)
         .map(|chunk| <[u8; 32]>::try_from(chunk).unwrap())
@@ -339,4 +350,5 @@ fn test_decommit_on_query() {
         verify_decommitment(2 + 16, f_g2x, &authentication_path_f_g2x, root),
         "verification of authentication path of f(gx) failed"
     );
+    // The last 9 sendings relate to decommitment on FRI layers and were tested in test_decommit_on_fri_layers
 }

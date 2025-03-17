@@ -10,8 +10,6 @@ pub fn run_part3(
     CP_merkle: MerkleTree<Sha256>,
     channel: &mut Channel,
 ) -> (
-    Vec<DensePolynomial<MyField>>,
-    Vec<Vec<MyField>>,
     Vec<Vec<MyField>>,
     Vec<MerkleTree<Sha256>>,
 ) {
@@ -25,7 +23,7 @@ pub fn run_part3(
         eval_domain[half_domain_size + 100].pow(&(vec![2]))
     );
     // Generate FRI commitments
-    let (fri_polys, fri_domains, fri_layers, fri_merkles) =
+    let (fri_polys, _, fri_layers, fri_merkles) =
         generate_fri_commitments(&CP, &eval_domain, &CP_eval, &CP_merkle, channel);
     assert_eq!(fri_layers.len(), 11, "Expected number of FRI layers is 11");
     assert_eq!(
@@ -46,5 +44,5 @@ pub fn run_part3(
         0,
         "Expacted last polynomial to be constant (degree 0)"
     );
-    (fri_polys, fri_domains, fri_layers, fri_merkles)
+    (fri_layers, fri_merkles)
 }
