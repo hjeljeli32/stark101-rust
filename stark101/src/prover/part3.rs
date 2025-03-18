@@ -1,4 +1,4 @@
-use crate::{channel::Channel, finite_fields::MyField, fri::generate_fri_commitments};
+use crate::common::{channel::Channel, finite_fields::MyField, fri::generate_fri_commitments};
 use ark_ff::Field;
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use rs_merkle::{algorithms::Sha256, MerkleTree};

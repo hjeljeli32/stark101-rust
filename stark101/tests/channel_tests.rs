@@ -1,6 +1,6 @@
 use ark_ff::{BigInteger, PrimeField};
 use hex::encode;
-use stark101::{channel::*, finite_fields::MyField};
+use stark101::common::{channel::*, finite_fields::MyField};
 
 #[test]
 fn test_new_channel() {

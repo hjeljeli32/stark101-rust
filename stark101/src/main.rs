@@ -1,9 +1,6 @@
 use std::time::Instant;
 
-use stark101::part1;
-use stark101::part2;
-use stark101::part3;
-use stark101::part4;
+use stark101::prover::{part1, part2, part3, part4};
 
 fn main() {
     let start = Instant::now();

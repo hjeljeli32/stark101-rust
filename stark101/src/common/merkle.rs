@@ -1,5 +1,4 @@
-use crate::finite_fields::MyField;
-use crate::utils::concat_slices;
+use crate::common::{finite_fields::MyField, utils::concat_slices};
 use ark_ff::{BigInteger, PrimeField};
 use rs_merkle::algorithms::Sha256;
 use rs_merkle::{Hasher, MerkleTree};

@@ -1,4 +1,4 @@
-use crate::finite_fields::MyField;
+use crate::common::finite_fields::MyField;
 use ark_ff::Field;
 use ark_poly::polynomial::univariate::*;
 use ark_poly::DenseUVPolynomial;

@@ -1,6 +1,6 @@
 use ark_ff::{fields::Field, AdditiveGroup};
 use ark_std::{test_rng, UniformRand};
-use stark101::finite_fields::MyField;
+use stark101::common::finite_fields::MyField;
 
 #[test]
 fn test_field_modulus() {

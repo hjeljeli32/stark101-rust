@@ -1,4 +1,4 @@
-use crate::{finite_fields::MyField, utils::concat_slices};
+use crate::common::{finite_fields::MyField, utils::concat_slices};
 use ark_ff::{BigInteger, PrimeField};
 use hex::encode;
 use num_bigint::BigUint;

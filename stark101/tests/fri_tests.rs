@@ -4,7 +4,7 @@ use ark_ff::{BigInteger, FftField, Field, PrimeField};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use ark_std::{test_rng, UniformRand};
 use hex::decode;
-use stark101::{
+use stark101::common::{
     channel::{Channel, Member, Type},
     finite_fields::MyField,
     fri::*,

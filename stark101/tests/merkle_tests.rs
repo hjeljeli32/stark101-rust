@@ -1,8 +1,7 @@
 use ark_ff::UniformRand;
 use ark_std::{rand::Rng, test_rng};
 use hex::encode;
-use stark101::finite_fields::MyField;
-use stark101::merkle::*;
+use stark101::common::{finite_fields::MyField, merkle::*};
 
 #[test]
 fn test_create_tree_with_2_leaves() {

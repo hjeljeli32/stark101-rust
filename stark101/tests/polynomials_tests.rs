@@ -2,8 +2,7 @@ use ark_ff::{AdditiveGroup, FftField, Field};
 use ark_poly::polynomial::univariate::*;
 use ark_poly::{DenseUVPolynomial, Polynomial};
 use ark_std::{rand::Rng, test_rng, UniformRand};
-use stark101::finite_fields::MyField;
-use stark101::polynomials::*;
+use stark101::common::{finite_fields::MyField, polynomials::*};
 use std::collections::HashSet;
 
 #[test]

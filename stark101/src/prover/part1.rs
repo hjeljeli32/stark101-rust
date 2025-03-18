@@ -1,4 +1,4 @@
-use crate::{channel::*, finite_fields::MyField, merkle::create_merkle_tree, polynomials::*};
+use crate::common::{channel::*, finite_fields::MyField, merkle::create_merkle_tree, polynomials::*};
 use ark_ff::{FftField, Field};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use rs_merkle::{algorithms::Sha256, MerkleTree};

@@ -1,4 +1,4 @@
-use crate::{channel::Channel, finite_fields::MyField, fri::decommit_on_query};
+use crate::common::{channel::Channel, finite_fields::MyField, fri::decommit_on_query};
 use rs_merkle::{algorithms::Sha256, MerkleTree};
 
 pub fn run_part4(

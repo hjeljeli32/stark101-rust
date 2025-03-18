@@ -1,4 +1,4 @@
-use crate::{
+use crate::common::{
     channel::Channel,
     finite_fields::MyField,
     merkle::create_merkle_tree,
