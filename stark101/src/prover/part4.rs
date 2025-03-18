@@ -1,7 +1,7 @@
 use crate::common::{channel::Channel, finite_fields::MyField, fri::decommit_on_query};
 use rs_merkle::{algorithms::Sha256, MerkleTree};
 
-pub fn run_part4(
+pub fn run(
     f_eval: Vec<MyField>,
     f_merkle: MerkleTree<Sha256>,
     fri_layers: Vec<Vec<MyField>>,

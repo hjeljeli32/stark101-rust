@@ -3,7 +3,7 @@ use ark_ff::Field;
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use rs_merkle::{algorithms::Sha256, MerkleTree};
 
-pub fn run_part3(
+pub fn run(
     eval_domain: &Vec<MyField>,
     CP: &DensePolynomial<MyField>,
     CP_eval: &Vec<MyField>,

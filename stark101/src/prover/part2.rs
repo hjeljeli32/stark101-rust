@@ -11,7 +11,7 @@ use ark_poly::{
 };
 use rs_merkle::{algorithms::Sha256, MerkleTree};
 
-pub fn run_part2(
+pub fn run(
     g: MyField,
     eval_domain: &Vec<MyField>,
     f: &DensePolynomial<MyField>,
