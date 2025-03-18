@@ -1,5 +1,5 @@
 # stark101-rust
-Rust implementation of STARK 101 (STARK prover from scratch)
+Rust implementation of STARK 101 (STARK prover and verifier from scratch)
 
 ## About
 
