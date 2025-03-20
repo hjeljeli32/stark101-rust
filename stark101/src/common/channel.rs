@@ -4,17 +4,21 @@ use hex::encode;
 use num_bigint::BigUint;
 use num_traits::cast::ToPrimitive;
 use rs_merkle::{algorithms::Sha256, Hasher};
+use serde_json::json;
 use std::fmt;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
     Send,
     Receive,
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Member {
     pub member_type: Type,
+    #[serde(serialize_with = "serialize_compact_array")]
+    #[serde(deserialize_with = "deserialize_compact_array")]
     pub data: Vec<u8>,
 }
 
@@ -36,6 +40,24 @@ impl fmt::Debug for Member {
         let encoded_data = encode(&self.data); // Apply encode to data
         write!(f, "{{{:?}:{}}}", self.member_type, encoded_data)
     }
+}
+
+// Custom serializer to keep `data` compact
+fn serialize_compact_array<S>(data: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let compact = json!(data).to_string(); // Compact JSON
+    serializer.serialize_str(&compact)
+}
+
+// Custom deserializer to parse `data` from a compact JSON string
+fn deserialize_compact_array<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let compact_str: String = Deserialize::deserialize(deserializer)?;
+    serde_json::from_str(&compact_str).map_err(serde::de::Error::custom)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
