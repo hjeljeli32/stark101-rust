@@ -1,7 +1,7 @@
+use serde_json;
 use stark101::prover;
 use std::fs::File;
 use std::io::Write;
-use serde_json;
 
 fn main() {
     let proof = prover::run();
@@ -11,6 +11,7 @@ fn main() {
 
     // Save to file
     let mut file = File::create("proofs/proof.json").expect("Failed to create file");
-    file.write_all(json.as_bytes()).expect("Failed to write to file");
+    file.write_all(json.as_bytes())
+        .expect("Failed to write to file");
     println!("✅ Proof saved successfully");
 }

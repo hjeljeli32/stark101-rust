@@ -1,6 +1,10 @@
 use ark_ff::{BigInteger, PrimeField};
 use hex::encode;
-use stark101::common::{channel::*, finite_fields::MyField};
+use stark101::common::{
+    channel::*,
+    finite_fields::MyField,
+    merkle::create_merkle_tree,
+};
 
 #[test]
 fn test_new_channel() {
@@ -113,4 +117,31 @@ fn test_receive_random_integers() {
         Member::new(Type::Receive, 5997_u64.to_le_bytes().to_vec()),
         "second received int is wrong"
     );
+}
+
+#[test]
+fn test_parse_sent_root() {
+    let data = vec![
+        MyField::from(1),
+        MyField::from(2),
+        MyField::from(3),
+        MyField::from(4),
+    ];
+    let merkle_tree = create_merkle_tree(&data);
+    let root = merkle_tree.root().unwrap();
+    let mut channel = Channel::new();
+    channel.send(&root.to_vec());
+    let parsed_root = parse_sent_root(&channel.proof[0]);
+    assert_eq!(root, parsed_root, "parsed root is wrong");
+}
+
+#[test]
+fn test_parse_received_field_element() {
+    let mut channel = Channel::new();
+    // we first send some data otherwise if we receive directly random field element it will be equal to 0
+    let data = [01u8; 32];
+    channel.send(&data.to_vec());
+    let field_element = channel.receive_random_field_element();
+    let parsed_field_element = parse_received_field_element(&channel.proof[1]);
+    assert_eq!(field_element, parsed_field_element, "parsed field element is wrong");
 }

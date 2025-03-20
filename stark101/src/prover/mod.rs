@@ -3,8 +3,8 @@ pub mod part2;
 pub mod part3;
 pub mod part4;
 
-use std::time::Instant;
 use crate::common::channel::Member;
+use std::time::Instant;
 
 pub fn run() -> Vec<Member> {
     println!("Executing prover...");

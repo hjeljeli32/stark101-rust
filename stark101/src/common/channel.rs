@@ -1,12 +1,11 @@
 use crate::common::{finite_fields::MyField, utils::concat_slices};
 use ark_ff::{BigInteger, PrimeField};
-use hex::encode;
+use hex::{decode, encode};
 use num_bigint::BigUint;
 use num_traits::cast::ToPrimitive;
 use rs_merkle::{algorithms::Sha256, Hasher};
-use serde_json::json;
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
@@ -17,8 +16,8 @@ pub enum Type {
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Member {
     pub member_type: Type,
-    #[serde(serialize_with = "serialize_compact_array")]
-    #[serde(deserialize_with = "deserialize_compact_array")]
+    #[serde(serialize_with = "serialize_hex_array")]
+    #[serde(deserialize_with = "deserialize_hex_array")]
     pub data: Vec<u8>,
 }
 
@@ -42,22 +41,20 @@ impl fmt::Debug for Member {
     }
 }
 
-// Custom serializer to keep `data` compact
-fn serialize_compact_array<S>(data: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
+fn serialize_hex_array<S>(data: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
-    let compact = json!(data).to_string(); // Compact JSON
+    let compact = encode(data); // Get hex-encoded string
     serializer.serialize_str(&compact)
 }
 
-// Custom deserializer to parse `data` from a compact JSON string
-fn deserialize_compact_array<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+fn deserialize_hex_array<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let compact_str: String = Deserialize::deserialize(deserializer)?;
-    serde_json::from_str(&compact_str).map_err(serde::de::Error::custom)
+    let hex_string: String = String::deserialize(deserializer)?; // Deserialize as a regular string
+    decode(&hex_string).map_err(serde::de::Error::custom) // Decode the hex string to Vec<u8>
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -105,4 +102,24 @@ impl Channel {
         });
         random_int
     }
+}
+
+pub fn parse_sent_root(member: &Member) -> [u8; 32] {
+    assert_eq!(member.member_type, Type::Send, "Type must be Send");
+    let root: [u8; 32] = match member.data.clone().try_into() {
+        Ok(arr) => arr,
+        Err(_) => panic!("Data must have exactly 32 bytes"),
+    };
+
+    root
+}
+
+pub fn parse_received_field_element(member: &Member) -> MyField {
+    assert_eq!(member.member_type, Type::Receive, "Type must be Receive");
+    let bytes: [u8; 8] = match member.data.clone().try_into() {
+        Ok(arr) => arr,
+        Err(_) => panic!("Data must have exactly 8 bytes"),
+    };
+
+    MyField::from(u64::from_le_bytes(bytes))
 }
