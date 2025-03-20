@@ -123,3 +123,27 @@ pub fn parse_received_field_element(member: &Member) -> MyField {
 
     MyField::from(u64::from_le_bytes(bytes))
 }
+
+pub fn parse_received_int(member: &Member) -> u64 {
+    assert_eq!(member.member_type, Type::Receive, "Type must be Receive");
+    let bytes: [u8; 8] = match member.data.clone().try_into() {
+        Ok(arr) => arr,
+        Err(_) => panic!("Data must have exactly 8 bytes"),
+    };
+
+    u64::from_le_bytes(bytes)
+}
+
+pub fn parse_sent_authentication_path(member: &Member) -> Vec<[u8; 32]> {
+    assert_eq!(member.member_type, Type::Send, "Type must be Send");
+    assert!(
+        member.data.len() % 32 == 0,
+        "Data must be a multiple of 32 bytes"
+    );
+
+    member
+        .data
+        .chunks(32)
+        .map(|chunk| chunk.try_into().expect("Chunk should have 32 bytes"))
+        .collect()
+}

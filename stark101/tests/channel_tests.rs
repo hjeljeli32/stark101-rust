@@ -3,7 +3,7 @@ use hex::encode;
 use stark101::common::{
     channel::*,
     finite_fields::MyField,
-    merkle::create_merkle_tree,
+    merkle::{create_merkle_tree, get_authentication_path},
 };
 
 #[test]
@@ -143,5 +143,44 @@ fn test_parse_received_field_element() {
     channel.send(&data.to_vec());
     let field_element = channel.receive_random_field_element();
     let parsed_field_element = parse_received_field_element(&channel.proof[1]);
-    assert_eq!(field_element, parsed_field_element, "parsed field element is wrong");
+    assert_eq!(
+        field_element, parsed_field_element,
+        "parsed field element is wrong"
+    );
+}
+
+#[test]
+fn test_parse_received_int() {
+    let mut channel = Channel::new();
+    // we first send some data otherwise if we receive directly random field element it will be equal to 0
+    let data = [01u8; 32];
+    channel.send(&data.to_vec());
+    let int = channel.receive_random_int(0, 8191);
+    let parsed_int = parse_received_int(&channel.proof[1]);
+    assert_eq!(int, parsed_int, "parsed int is wrong");
+}
+
+#[test]
+fn test_parse_sent_authentication_path() {
+    let data = vec![
+        MyField::from(1),
+        MyField::from(2),
+        MyField::from(3),
+        MyField::from(4),
+    ];
+    let merkle_tree = create_merkle_tree(&data);
+    let root = merkle_tree.root().unwrap();
+    let mut channel = Channel::new();
+    let authentication_path = get_authentication_path(&merkle_tree, 3);
+    channel.send(
+        &authentication_path
+            .iter()
+            .flat_map(|arr| arr.to_vec())
+            .collect(),
+    );
+    let parsed_authentication_path = parse_sent_authentication_path(&channel.proof[0]);
+    assert_eq!(
+        authentication_path, parsed_authentication_path,
+        "parsed authentication path is wrong"
+    );
 }
