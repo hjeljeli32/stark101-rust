@@ -88,8 +88,17 @@ pub fn compose_polynomials(
     let mut result = DensePolynomial::<MyField> {
         coeffs: vec![f_coeffs[0]],
     };
-    for (i, coeff) in f_coeffs.iter().enumerate().skip(1) {
-        result = result + &(pow(g, i as u64) * *coeff);
+
+    let mut g_power = DensePolynomial::<MyField> {
+        coeffs: vec![MyField::from(1)],
+    }; // Initialize g^0 = 1
+
+    for (_, coeff) in f_coeffs.iter().enumerate().skip(1) {
+        // Update g^i by multiplying the previous g^i by g
+        g_power = g_power.clone() * g;
+
+        // Add the current term (g^i * coeff) to the result
+        result = result + &(g_power.clone() * *coeff);
     }
     result
 }
