@@ -150,6 +150,18 @@ fn test_parse_received_field_element() {
 }
 
 #[test]
+fn test_parse_sent_field_element() {
+    let mut channel = Channel::new();
+    let field_element = MyField::from(1234);
+    channel.send(&field_element.into_bigint().to_bytes_le());
+    let parsed_field_element = parse_sent_field_element(&channel.proof[0]);
+    assert_eq!(
+        field_element, parsed_field_element,
+        "parsed field element is wrong"
+    );
+}
+
+#[test]
 fn test_parse_received_int() {
     let mut channel = Channel::new();
     // we first send some data otherwise if we receive directly random field element it will be equal to 0

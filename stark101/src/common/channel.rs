@@ -124,6 +124,16 @@ pub fn parse_received_field_element(member: &Member) -> MyField {
     MyField::from(u64::from_le_bytes(bytes))
 }
 
+pub fn parse_sent_field_element(member: &Member) -> MyField {
+    assert_eq!(member.member_type, Type::Send, "Type must be Send");
+    let bytes: [u8; 8] = match member.data.clone().try_into() {
+        Ok(arr) => arr,
+        Err(_) => panic!("Data must have exactly 8 bytes"),
+    };
+
+    MyField::from(u64::from_le_bytes(bytes))
+}
+
 pub fn parse_received_int(member: &Member) -> u64 {
     assert_eq!(member.member_type, Type::Receive, "Type must be Receive");
     let bytes: [u8; 8] = match member.data.clone().try_into() {

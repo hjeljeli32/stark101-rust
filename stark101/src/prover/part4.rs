@@ -10,7 +10,7 @@ pub fn run(
 ) {
     println!("Executing part 4...");
 
-    // Decommit on a Set of Queries
+    // Decommit on a Set of 3 Queries
     // Prover gets a set of random queries from the channel, i.e., indices between 0 to 8191, and decommits on each query.
     for _ in 0..3 {
         let id = channel.receive_random_int(0, 8191 - 16);

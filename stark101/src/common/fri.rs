@@ -9,6 +9,8 @@ use ark_ff::{BigInteger, Field, PrimeField};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use rs_merkle::{algorithms::Sha256, MerkleTree};
 
+use super::merkle::verify_decommitment;
+
 // Computes the subsequent FRI domain by taking the first half of the current FRI domain (dropping the second half),
 // and squaring each of its elements.
 pub fn compute_next_fri_domain(fri_domain: &Vec<MyField>) -> Vec<MyField> {
@@ -161,4 +163,96 @@ pub fn decommit_on_query(
             .collect(),
     ); // authentication path of f(g^2x)
     decommit_on_fri_layers(id, fri_layers, fri_merkles, channel);
+}
+
+pub fn check_decommittment_on_fri_layers(
+    eval_domain: &Vec<MyField>,
+    betas: &Vec<MyField>,
+    fri_polys_merkle_roots: &Vec<[u8; 32]>,
+    id: usize,
+    fri_poly_id: &Vec<MyField>,
+    authentication_path_fri_poly_id: &Vec<Vec<[u8; 32]>>,
+    fri_poly_sibling: &Vec<MyField>,
+    authentication_path_fri_poly_sibling: &Vec<Vec<[u8; 32]>>,
+) {
+    let layer_nb = fri_poly_id.len() - 1;
+    let mut layer_len = 8 * 1 << layer_nb;
+    let mut fri_domain = eval_domain.clone();
+    for i in 0..layer_nb {
+        let id = id % layer_len;
+        let sibling_id = (id + (layer_len / 2)) % layer_len;
+        assert!(
+            verify_decommitment(
+                id,
+                fri_poly_id[i],
+                &authentication_path_fri_poly_id[i],
+                fri_polys_merkle_roots[i]
+            ),
+            "check of decommitment of id of round {} in fri_poly failed",
+            i
+        );
+        assert!(
+            verify_decommitment(
+                sibling_id,
+                fri_poly_sibling[i],
+                &authentication_path_fri_poly_sibling[i],
+                fri_polys_merkle_roots[i]
+            ),
+            "check of decommitment of sibling of round {} in fri_poly failed",
+            i
+        );
+        let sum = (fri_poly_id[i] + fri_poly_sibling[i]) / MyField::from(2);
+        let diff = (fri_poly_id[i] - fri_poly_sibling[i]) / (MyField::from(2) * fri_domain[id]);
+        assert_eq!(
+            sum + (diff * betas[i]),
+            fri_poly_id[i + 1],
+            "Evaluations of FRI poly at layer {} do not satisfy the recurrence relation",
+            i
+        );
+
+        layer_len /= 2;
+        fri_domain = compute_next_fri_domain(&fri_domain);
+    }
+}
+
+// Checks the consistency of decomitted data with committed data
+pub fn check_decommittment_on_query(
+    eval_domain: &Vec<MyField>,
+    f_merkle_root: [u8; 32],
+    betas: &Vec<MyField>,
+    fri_polys_merkle_roots: &Vec<[u8; 32]>,
+    id: usize,
+    f_id: MyField,
+    authentication_path_f_id: &Vec<[u8; 32]>,
+    f_g_id: MyField,
+    authentication_path_f_g_id: &Vec<[u8; 32]>,
+    f_g2_id: MyField,
+    authentication_path_f_g2_id: &Vec<[u8; 32]>,
+    fri_poly_id: &Vec<MyField>,
+    authentication_path_fri_poly_id: &Vec<Vec<[u8; 32]>>,
+    fri_poly_sibling: &Vec<MyField>,
+    authentication_path_fri_poly_sibling: &Vec<Vec<[u8; 32]>>,
+) {
+    assert!(
+        verify_decommitment(id, f_id, authentication_path_f_id, f_merkle_root),
+        "check of decommitment of id in f failed"
+    );
+    assert!(
+        verify_decommitment(id + 8, f_g_id, authentication_path_f_g_id, f_merkle_root),
+        "check of decommitment of g*id in f failed"
+    );
+    assert!(
+        verify_decommitment(id + 16, f_g2_id, authentication_path_f_g2_id, f_merkle_root),
+        "check of decommitment of g^2*id in f failed"
+    );
+    check_decommittment_on_fri_layers(
+        eval_domain,
+        betas,
+        fri_polys_merkle_roots,
+        id,
+        fri_poly_id,
+        authentication_path_fri_poly_id,
+        fri_poly_sibling,
+        authentication_path_fri_poly_sibling,
+    );
 }
