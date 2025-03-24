@@ -3,6 +3,7 @@ use ark_ff::Field;
 use ark_poly::polynomial::univariate::*;
 use ark_poly::DenseUVPolynomial;
 use ark_std::{test_rng, Zero};
+use rayon::prelude::*;
 
 /// Generates a random polynomial of certain degree
 pub fn random_polynomial(degree: usize) -> DensePolynomial<MyField> {
@@ -13,34 +14,36 @@ pub fn random_polynomial(degree: usize) -> DensePolynomial<MyField> {
 /// Calculates lagrange polynomials corresponding to given points
 fn calculate_lagrange_polynomials(x_points: &Vec<MyField>) -> Vec<DensePolynomial<MyField>> {
     let n = x_points.len();
-    let mut lagrange_polys = vec![];
 
     // Computes monomials and their product
-    let mut monomials = vec![];
-    let mut product = DensePolynomial {
-        coeffs: vec![MyField::ONE],
-    };
-    for x in x_points {
-        monomials.push(DensePolynomial {
-            coeffs: vec![-*x, MyField::from(1)],
-        });
-        product = product * monomials.last().unwrap();
-    }
+    let monomials = x_points.par_iter().map(|x| DensePolynomial {
+        coeffs: vec![-*x, MyField::from(1)],
+    });
+    let product = monomials.clone().into_par_iter().reduce(
+        || DensePolynomial {
+            coeffs: vec![MyField::ONE],
+        },
+        |product, monomial| product * monomial,
+    );
 
     // Computes Lagrange polynomials
-    for i in 0..n {
-        let numerator = &product
-            / DensePolynomial {
-                coeffs: vec![-x_points[i], MyField::from(1)],
-            };
-        let mut denominator = MyField::ONE;
-        for j in 0..n {
-            if i != j {
-                denominator *= x_points[i] - x_points[j];
-            }
-        }
-        lagrange_polys.push(&numerator * denominator.inverse().unwrap());
-    }
+    let lagrange_polys = (0..n)
+        .into_par_iter()
+        .map(|i| {
+            let numerator = &product
+                / DensePolynomial {
+                    coeffs: vec![-x_points[i], MyField::from(1)],
+                };
+            let denominator = (0..n)
+                .filter(|&j| j != i)
+                .collect::<Vec<_>>() // Collect into Vec to enable parallel iteration
+                .into_par_iter()
+                .map(|j| x_points[i] - x_points[j])
+                .reduce(|| MyField::ONE, |val, denominator| denominator * val);
+            &numerator * denominator.inverse().unwrap()
+        })
+        .collect();
+
     lagrange_polys
 }
 
@@ -50,13 +53,12 @@ pub fn interpolate_polynomial(
     y_points: &Vec<MyField>,
 ) -> DensePolynomial<MyField> {
     let n = x_points.len();
-    let mut result = DensePolynomial::zero();
     let lagrange_polys = calculate_lagrange_polynomials(&x_points);
 
-    for i in 0..n {
-        // Multiply L_i(x) by y_i and add it to the result
-        result = result + &(&lagrange_polys[i] * y_points[i]);
-    }
+    let result = (0..n)
+        .into_par_iter()
+        .map(|i| &lagrange_polys[i] * y_points[i])
+        .reduce(|| DensePolynomial::zero(), |result, value| result + &value);
     result
 }
 

@@ -181,7 +181,6 @@ fn test_parse_sent_authentication_path() {
         MyField::from(4),
     ];
     let merkle_tree = create_merkle_tree(&data);
-    let root = merkle_tree.root().unwrap();
     let mut channel = Channel::new();
     let authentication_path = get_authentication_path(&merkle_tree, 3);
     channel.send(
