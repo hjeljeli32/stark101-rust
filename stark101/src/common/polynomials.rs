@@ -55,11 +55,10 @@ pub fn interpolate_polynomial(
     let n = x_points.len();
     let lagrange_polys = calculate_lagrange_polynomials(&x_points);
 
-    let result = (0..n)
+    (0..n)
         .into_par_iter()
         .map(|i| &lagrange_polys[i] * y_points[i])
-        .reduce(|| DensePolynomial::zero(), |result, value| result + &value);
-    result
+        .reduce(|| DensePolynomial::zero(), |result, value| result + &value)
 }
 
 /// Raises a polynomial to a power
@@ -87,20 +86,32 @@ pub fn compose_polynomials(
     g: &DensePolynomial<MyField>,
 ) -> DensePolynomial<MyField> {
     let f_coeffs = f.coeffs();
-    let mut result = DensePolynomial::<MyField> {
+    let n = f_coeffs.len();
+    let first_term = DensePolynomial::<MyField> {
         coeffs: vec![f_coeffs[0]],
     };
 
-    let mut g_power = DensePolynomial::<MyField> {
-        coeffs: vec![MyField::from(1)],
-    }; // Initialize g^0 = 1
+    // Precompute powers of g sequentially to avoid mutable conflicts in parallel execution
+    let g_powers: Vec<DensePolynomial<MyField>> = (0..n)
+        .scan(
+            DensePolynomial {
+                coeffs: vec![MyField::from(1)],
+            },
+            |g_power, _| {
+                let current = g_power.clone();
+                *g_power = g_power.clone() * g;
+                Some(current)
+            },
+        )
+        .collect();
 
-    for (_, coeff) in f_coeffs.iter().enumerate().skip(1) {
-        // Update g^i by multiplying the previous g^i by g
-        g_power = g_power.clone() * g;
+    let terms: Vec<DensePolynomial<MyField>> = f_coeffs
+        .par_iter()
+        .enumerate()
+        .skip(1)
+        .map(|(i, coeff)| &g_powers[i] * *coeff)
+        .collect();
 
-        // Add the current term (g^i * coeff) to the result
-        result = result + &(g_power.clone() * *coeff);
-    }
-    result
+    // Sum all terms - no need fo parallelization
+    first_term + &terms.into_iter().reduce(|acc, e| &acc + e).unwrap()
 }
