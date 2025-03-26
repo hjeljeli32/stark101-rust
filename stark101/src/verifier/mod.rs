@@ -1,4 +1,6 @@
 use ark_ff::{FftField, Field};
+use rayon::iter::IntoParallelIterator;
+use rayon::prelude::*;
 
 use crate::common::{
     channel::{
@@ -44,7 +46,8 @@ pub fn run(proof: Vec<Member>) -> bool {
 
     // Prover Decommitted on a Set of 3 Queries
     // We verify the data's consistency for each Query
-    for query in 0..3 {
+    // We process the verifications in parallel
+    (0..3).into_par_iter().for_each(|query| {
         let id = parse_received_int(&proof[26 + 48 * query]) as usize; //members 26, 74, 122
 
         let f_id = parse_sent_field_element(&proof[27 + 48 * query]); // members 27, 75, 123
@@ -95,7 +98,7 @@ pub fn run(proof: Vec<Member>) -> bool {
             &fri_poly_sibling,
             &authentication_path_fri_poly_sibling,
         );
-    }
+    });
 
     println!("Verification took: {:?}", start.elapsed());
     true
