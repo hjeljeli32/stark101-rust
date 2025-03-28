@@ -35,8 +35,9 @@ fn test_field_operations() {
 
 #[test]
 fn test_field_inversion() {
+    let mut rng = test_rng();
     for _ in 0..100 {
-        let t = MyField::rand(&mut test_rng());
+        let t = MyField::rand(&mut rng);
         let inverse_t = t.inverse().unwrap();
 
         assert_eq!(inverse_t * t, MyField::ONE, "Inverse computation failed");
@@ -45,8 +46,9 @@ fn test_field_inversion() {
 
 #[test]
 fn test_field_division() {
+    let mut rng = test_rng();
     for _ in 0..100 {
-        let t = MyField::rand(&mut test_rng());
+        let t = MyField::rand(&mut rng);
         let inverse_t = MyField::ONE / t;
 
         assert_eq!(
