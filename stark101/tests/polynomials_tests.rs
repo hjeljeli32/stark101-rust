@@ -7,8 +7,9 @@ use std::collections::HashSet;
 
 #[test]
 fn test_rand_poly_degree() {
+    let mut rng = ark_std::test_rng();
     for i in 0..100 {
-        assert_eq!(random_polynomial(i).degree(), i, "degree is wrong");
+        assert_eq!(random_polynomial(&mut rng, i).degree(), i, "degree is wrong");
     }
 }
 

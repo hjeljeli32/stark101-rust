@@ -2,12 +2,11 @@ use crate::common::finite_fields::MyField;
 use ark_ff::Field;
 use ark_poly::polynomial::univariate::*;
 use ark_poly::DenseUVPolynomial;
-use ark_std::{test_rng, Zero};
+use ark_std::{rand::Rng, Zero};
 use rayon::prelude::*;
 
 /// Generates a random polynomial of certain degree
-pub fn random_polynomial(degree: usize) -> DensePolynomial<MyField> {
-    let rng = &mut test_rng();
+pub fn random_polynomial(rng: &mut impl Rng, degree: usize) -> DensePolynomial<MyField> {
     DensePolynomial::<MyField>::rand(degree, rng)
 }
 
